@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>autoshot-gallery — Catalogue</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --surface: #131722;
+      --surface-2: #1a2030;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #eef1f7;
+      --muted: #8b95ab;
+      --accent: #4f7cff;
+      --accent-glow: rgba(79, 124, 255, 0.25);
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top, #131a2b 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(11, 13, 18, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+    }
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+    .brand h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand p { font-size: 0.8rem; color: var(--muted); }
+    .stats-pill {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+    }
+    .stats-pill strong { color: #fff; }
+    .progress-wrap {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      transition: width 0.3s ease;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 240px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .tab {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.48rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .tab:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .tab .count {
+      background: rgba(0, 0, 0, 0.28);
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+    }
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(79, 124, 255, 0.5);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+    }
+    .thumb {
+      aspect-ratio: 16 / 10;
+      background: #090b10;
+      position: relative;
+      overflow: hidden;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .badge-cat {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(11, 13, 18, 0.78);
+      border: 1px solid var(--border);
+      padding: 0.18rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #cbd5e1;
+    }
+    .card-body {
+      padding: 0.8rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+    .card-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--surface-2);
+      padding: 0.14rem 0.42rem;
+      border-radius: 5px;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .empty {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(5, 7, 11, 0.88);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      max-width: 960px;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .modal-img {
+      width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      background: #06080c;
+      display: block;
+    }
+    .modal-info {
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 0.95rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .btn-ghost {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="top-row">
+        <div class="brand">
+          <div class="brand-badge">AS</div>
+          <div>
+            <h1>AUTOSHOT — autoshot-gallery</h1>
+            <p id="updated-at">Chargement du catalogue...</p>
+          </div>
+        </div>
+        <div class="stats-pill">
+          <span>Total : <strong id="total-count">0</strong></span>
+          <span>Affichés : <strong id="visible-count">0</strong></span>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <span>Progression scan</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <div class="controls">
+        <div class="search-box">
+          <input type="search" id="search" placeholder="Rechercher par nom, ID, modèle ou sous-catégorie..." />
+        </div>
+        <select id="subcat-filter">
+          <option value="all">Toutes les sous-catégories</option>
+        </select>
+        <button class="btn" id="chromakey-toggle" type="button">Sans fond : ON</button>
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">Aucun élément ne correspond à votre recherche.</div>
+  </main>
+
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <img class="modal-img" id="modal-img" src="" alt="" />
+      <div class="modal-info">
+        <div>
+          <h2 id="modal-title" style="font-size:1.1rem;margin-bottom:0.25rem;"></h2>
+          <p id="modal-meta" style="font-size:0.84rem;color:var(--muted);"></p>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+          <button class="btn" id="modal-copy">Copier ID</button>
+          <button class="btn btn-ghost" id="modal-close">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const CAT_LABELS = {
+        all: 'Tout',
+        weapons: '🔫 Weapons',
+        vehicles: '🚗 Vehicles',
+        clothes: '👕 Clothes',
+        items: '🎒 Items',
+        props: '📦 Props'
+      };
+
+      let items = [];
+      let activeCat = 'all';
+      let activeSubcat = 'all';
+      let searchQuery = '';
+      let currentModalItem = null;
+      let chromaKeyOn = true;
+
+      function applyChromaKey(imgEl) {
+        if (!chromaKeyOn || !imgEl || imgEl.dataset.ckDone === '1') return;
+        const c = document.createElement('canvas');
+        const w = imgEl.naturalWidth || 0;
+        const h = imgEl.naturalHeight || 0;
+        if (!w || !h) return;
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(imgEl, 0, 0, w, h);
+        try {
+          const frame = ctx.getImageData(0, 0, w, h);
+          const d = frame.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const r = d[i], g = d[i + 1], b = d[i + 2];
+            if (g > 110 && g > r * 1.35 && g > b * 1.35) {
+              d[i + 3] = 0;
+            }
+          }
+          ctx.putImageData(frame, 0, 0);
+          imgEl.dataset.ckDone = '1';
+          imgEl.src = c.toDataURL('image/png');
+        } catch (_) {}
+      }
+
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('empty');
+      const tabsEl = document.getElementById('tabs');
+      const subcatEl = document.getElementById('subcat-filter');
+      const searchEl = document.getElementById('search');
+      const totalEl = document.getElementById('total-count');
+      const visibleEl = document.getElementById('visible-count');
+      const updatedEl = document.getElementById('updated-at');
+      const progressFill = document.getElementById('progress-fill');
+      const progressText = document.getElementById('progress-text');
+
+      const modal = document.getElementById('modal');
+      const modalImg = document.getElementById('modal-img');
+      const modalTitle = document.getElementById('modal-title');
+      const modalMeta = document.getElementById('modal-meta');
+
+      function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, function (c) {
+          return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+        });
+      }
+
+      function renderTabs() {
+        const counts = { all: items.length, weapons: 0, vehicles: 0, clothes: 0, items: 0, props: 0 };
+        items.forEach(it => { if (counts[it.category] !== undefined) counts[it.category]++; });
+
+        tabsEl.innerHTML = Object.keys(CAT_LABELS).map(cat => {
+          const cls = cat === activeCat ? 'tab active' : 'tab';
+          return `<button class="${cls}" data-cat="${cat}">${CAT_LABELS[cat]} <span class="count">${counts[cat] || 0}</span></button>`;
+        }).join('');
+
+        tabsEl.querySelectorAll('.tab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            activeCat = btn.dataset.cat;
+            activeSubcat = 'all';
+            renderSubcats();
+            renderTabs();
+            renderGrid();
+          });
+        });
+      }
+
+      function renderSubcats() {
+        const set = new Set();
+        items.forEach(it => {
+          if ((activeCat === 'all' || it.category === activeCat) && it.subcategory) {
+            set.add(it.subcategory);
+          }
+        });
+        const sorted = Array.from(set).sort();
+        subcatEl.innerHTML = '<option value="all">Toutes les sous-catégories</option>' +
+          sorted.map(sc => `<option value="${escapeHtml(sc)}">${escapeHtml(sc)}</option>`).join('');
+        subcatEl.value = activeSubcat;
+      }
+
+      function renderGrid() {
+        const q = searchQuery.trim().toLowerCase();
+        const filtered = items.filter(it => {
+          if (activeCat !== 'all' && it.category !== activeCat) return false;
+          if (activeSubcat !== 'all' && it.subcategory !== activeSubcat) return false;
+          if (!q) return true;
+          return (it.name || '').toLowerCase().includes(q) ||
+                 (it.id || '').toLowerCase().includes(q) ||
+                 (it.subcategory || '').toLowerCase().includes(q);
+        });
+
+        visibleEl.textContent = filtered.length;
+        if (filtered.length === 0) {
+          grid.innerHTML = '';
+          empty.style.display = 'block';
+          return;
+        }
+        empty.style.display = 'none';
+
+        const slice = filtered.slice(0, 600);
+        grid.innerHTML = slice.map((it, idx) => `
+          <div class="card" data-idx="${idx}">
+            <div class="thumb">
+              <img loading="lazy" src="${escapeHtml(it.image)}" alt="${escapeHtml(it.name)}" />
+              <span class="badge-cat">${escapeHtml(it.subcategory || it.category)}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-title" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
+              <div class="card-meta">
+                <span class="card-id" title="${escapeHtml(it.id)}">${escapeHtml(it.id)}</span>
+                <span>${escapeHtml(it.category)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        grid.querySelectorAll('.card').forEach((card, i) => {
+          card.addEventListener('click', () => openModal(slice[i]));
+          const img = card.querySelector('img');
+          if (img) {
+            img.crossOrigin = 'anonymous';
+            if (img.complete) applyChromaKey(img);
+            else img.addEventListener('load', () => applyChromaKey(img), { once: true });
+          }
+        });
+      }
+
+      function openModal(it) {
+        currentModalItem = it;
+        modalImg.src = it.image;
+        modalTitle.textContent = it.name;
+        modalMeta.textContent = `${it.category} • ${it.subcategory || '-'} • ID: ${it.id}`;
+        modal.classList.add('open');
+      }
+
+      document.getElementById('modal-close').addEventListener('click', () => modal.classList.remove('open'));
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+      document.getElementById('modal-copy').addEventListener('click', () => {
+        if (currentModalItem && navigator.clipboard) {
+          navigator.clipboard.writeText(currentModalItem.id);
+        }
+      });
+
+      searchEl.addEventListener('input', (e) => { searchQuery = e.target.value; renderGrid(); });
+      subcatEl.addEventListener('change', (e) => { activeSubcat = e.target.value; renderGrid(); });
+      const ckBtn = document.getElementById('chromakey-toggle');
+      if (ckBtn) {
+        ckBtn.addEventListener('click', () => {
+          chromaKeyOn = !chromaKeyOn;
+          ckBtn.textContent = chromaKeyOn ? 'Sans fond : ON' : 'Sans fond : OFF';
+          renderGrid();
+        });
+      }
+
+      fetch('./data.json?v=' + Date.now())
+        .then(r => r.json())
+        .then(data => {
+          items = Array.isArray(data.items) ? data.items : [];
+          totalEl.textContent = items.length;
+          updatedEl.textContent = data.updatedAt ? ('Dernière mise à jour : ' + data.updatedAt) : 'Catalogue actif';
+          const pct = data.scanProgress ? Math.min(100, Math.max(0, Number(data.scanProgress))) : 100;
+          progressFill.style.width = pct + '%';
+          progressText.textContent = pct + '%';
+          renderTabs();
+          renderSubcats();
+          renderGrid();
+        })
+        .catch(() => {
+          updatedEl.textContent = 'Catalogue vide ou introuvable (data.json)';
+        });
+    })();
+  </script>
+</body>
+</html>
